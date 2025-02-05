@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "bom"
+  site-url: "https://janhesse53.github.io/bom"
+  description: "A few helpers to work with data representing bill of materials (bom)."
+  repo-branch: main
+  repo-url: "https://github.com/janhesse53/bom"
