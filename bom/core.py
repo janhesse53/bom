@@ -129,7 +129,7 @@ def get_sample_data():
 
     return df, df_attributes
 
-# %% ../nbs/00_core.ipynb 8
+# %% ../nbs/00_core.ipynb 7
 def build_complete_graph(df, df_attributes=None):
     """
     Build a directed graph (DiGraph) from the BOM DataFrame.
@@ -156,7 +156,7 @@ def build_complete_graph(df, df_attributes=None):
 
     return G
 
-# %% ../nbs/00_core.ipynb 11
+# %% ../nbs/00_core.ipynb 10
 def get_all_predecessors(G, node_id):
     """
     Return a list of all predecessors (ancestors) of `node_id`.
@@ -172,7 +172,7 @@ def get_all_predecessors(G, node_id):
                 queue.append(p)
     return visited
 
-# %% ../nbs/00_core.ipynb 15
+# %% ../nbs/00_core.ipynb 14
 def get_all_successors(G, node_id):
     """
     Return a list of all successors (descendants) of `node_id`.
@@ -188,13 +188,13 @@ def get_all_successors(G, node_id):
                 queue.append(s)
     return visited
 
-# %% ../nbs/00_core.ipynb 19
+# %% ../nbs/00_core.ipynb 18
 def select_subg_by_root(G, root_id):
     nodes_of_interest = get_all_successors(G, root_id)  # or any other list of nodes
     nodes_of_interest.append(root_id)  # don't forget to add the root if needed
     return G.subgraph(nodes_of_interest)
 
-# %% ../nbs/00_core.ipynb 22
+# %% ../nbs/00_core.ipynb 21
 def add_levels(G):
     '''Calculate levels starting from root'''
     roots = [node for node in G.nodes() if G.in_degree(node) == 0]
@@ -214,7 +214,7 @@ def add_levels(G):
         print('Has multiple roots or no roots at all!')
     return G
 
-# %% ../nbs/00_core.ipynb 27
+# %% ../nbs/00_core.ipynb 26
 def plot_graph(
     G, 
     layout='multipartite', 
