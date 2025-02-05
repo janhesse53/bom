@@ -5,4 +5,10 @@ d = { 'settings': { 'branch': 'main',
                 'doc_host': 'https://janhesse53.github.io',
                 'git_url': 'https://github.com/janhesse53/bom',
                 'lib_path': 'bom'},
-  'syms': {'bom.core': {'bom.core.foo': ('core.html#foo', 'bom/core.py')}}}
+  'syms': { 'bom.core': { 'bom.core.add_levels': ('core.html#add_levels', 'bom/core.py'),
+                          'bom.core.build_complete_graph': ('core.html#build_complete_graph', 'bom/core.py'),
+                          'bom.core.get_all_predecessors': ('core.html#get_all_predecessors', 'bom/core.py'),
+                          'bom.core.get_all_successors': ('core.html#get_all_successors', 'bom/core.py'),
+                          'bom.core.get_sample_data': ('core.html#get_sample_data', 'bom/core.py'),
+                          'bom.core.plot_graph': ('core.html#plot_graph', 'bom/core.py'),
+                          'bom.core.select_subg_by_root': ('core.html#select_subg_by_root', 'bom/core.py')}}}
