@@ -14,26 +14,11 @@ Install latest from the GitHub
 $ pip install git+https://github.com/janhesse53/bom.git
 ```
 
-or from [conda](https://anaconda.org/janhesse53/bom)
-
-``` sh
-$ conda install -c janhesse53 bom
-```
-
-or from [pypi](https://pypi.org/project/bom/)
-
-``` sh
-$ pip install bom
-```
-
 ### Documentation
 
 Documentation can be found hosted on this GitHub
 [repository](https://github.com/janhesse53/bom)’s
-[pages](https://janhesse53.github.io/bom/). Additionally you can find
-package manager specific guidelines on
-[conda](https://anaconda.org/janhesse53/bom) and
-[pypi](https://pypi.org/project/bom/) respectively.
+[pages](https://janhesse53.github.io/bom/).
 
 ## How to use
 
