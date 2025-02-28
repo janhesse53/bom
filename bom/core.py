@@ -10,7 +10,6 @@ __all__ = ['get_sample_data', 'build_complete_graph', 'get_all_predecessors', 'g
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
-from tqdm.auto import tqdm
 
 # %% ../nbs/00_core.ipynb 4
 def get_sample_data():
@@ -259,7 +258,7 @@ def create_binary_matrix(G, root_nodes=None):
     '''Creates a binary matrix with endproducts as indices and parts as columns'''
     if not root_nodes: 
         root_nodes = get_all_roots(G)
-    dfs = [pd.DataFrame({root: get_all_successors(G, root)}).stack() for root in tqdm(root_nodes)]
+    dfs = [pd.DataFrame({root: get_all_successors(G, root)}).stack() for root in root_nodes]
     final_df = pd.concat(dfs).reset_index(level=-1)
     final_df.columns = ['head', 'parts']
     return final_df.assign(value=1).pivot_table(index='head', columns='parts', values='value', fill_value=0).astype(int)
