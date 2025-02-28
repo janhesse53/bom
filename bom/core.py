@@ -4,12 +4,13 @@
 
 # %% auto 0
 __all__ = ['get_sample_data', 'build_complete_graph', 'get_all_predecessors', 'get_all_successors', 'select_subg_by_root',
-           'add_levels', 'plot_graph']
+           'get_all_roots', 'add_levels', 'plot_graph', 'create_binary_matrix']
 
 # %% ../nbs/00_core.ipynb 3
 import pandas as pd
 import networkx as nx
 import matplotlib.pyplot as plt
+from tqdm.auto import tqdm
 
 # %% ../nbs/00_core.ipynb 4
 def get_sample_data():
@@ -195,9 +196,14 @@ def select_subg_by_root(G, root_id):
     return G.subgraph(nodes_of_interest)
 
 # %% ../nbs/00_core.ipynb 21
+def get_all_roots(G):
+    '''Returns a list of nodes with no ingoing edges (root_nodes)'''
+    return [n for n in G.nodes() if G.in_degree(n) == 0]
+
+# %% ../nbs/00_core.ipynb 22
 def add_levels(G):
     '''Calculate levels starting from root'''
-    roots = [node for node in G.nodes() if G.in_degree(node) == 0]
+    roots = get_all_roots(G)
     if len(roots)==1:
         root_id = roots[0]
         levels = {root_id: 0}
@@ -214,52 +220,46 @@ def add_levels(G):
         print('Has multiple roots or no roots at all!')
     return G
 
-# %% ../nbs/00_core.ipynb 26
-def plot_graph(
-    G, 
-    layout='multipartite', 
-    figsize=(6, 6), 
-    font_size=8, 
-    node_size=1000, 
-    node_color='lightblue'
-):
-    """
-    Plot a directed graph with the specified layout and styling.
+# %% ../nbs/00_core.ipynb 27
+def plot_graph(G, # NetworkX graph
+               layout='multipartite', # 'multipartite' or 'kamada_kawai'
+               figsize=(24, 12), 
+               font_size=8, 
+               node_size=1000, 
+               node_color='lightblue', 
+               direction='top_to_bottom', # if layout is multipartite the direction is top to bottom, to rotate set to None
+               label_rotation=45): #Rotation angle for node labels (in degrees)
+    """Plot a graph with specified layout and styling."""
     
-    Parameters:
-    -----------
-    G : nx.DiGraph
-        The graph to plot.
-    layout : str
-        'multipartite' uses node 'level' attribute, 
-        'kamada_kawai' uses a force-directed layout.
-    figsize : tuple
-        Figure size (width, height).
-    font_size : int
-        Font size for node labels.
-    node_size : int
-        Size of each node.
-    node_color : str
-        Color of the nodes.
-    """
     plt.figure(figsize=figsize)
-
+    
     if layout == 'multipartite':
-        if 'level' not in next(iter(G.nodes(data=True)))[1]:
-            G = add_levels(G)  # automatically add levels if missing
+        if 'level' not in G.nodes[list(G.nodes())[0]]: G = add_levels(G)
         pos = nx.multipartite_layout(G, subset_key='level')
-    else:
-        pos = nx.kamada_kawai_layout(G)
-
-    nx.draw(
-        G, pos,
-        with_labels=True,
-        font_size=font_size,
-        node_size=node_size,
-        node_color=node_color,
-        arrowsize=20
-    )
+        if direction == 'top_to_bottom': pos = {node: (y, -x) for node, (x, y) in pos.items()}
+    else: pos = nx.kamada_kawai_layout(G)
+    
+    nx.draw(G, pos,
+            with_labels=False,  # Disable default labels
+            font_size=font_size,
+            node_size=node_size,
+            node_color=node_color)
+    
+    for node, (x, y) in pos.items():
+        plt.text(x, y, s=node, fontsize=font_size, ha='center', va='center', rotation=label_rotation)
+    
     edge_labels = nx.get_edge_attributes(G, 'quantity')
-    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=font_size)
+    nx.draw_networkx_edge_labels(G, pos, edge_labels)
+    
     plt.axis('off')
     plt.show()
+
+# %% ../nbs/00_core.ipynb 30
+def create_binary_matrix(G, root_nodes=None):
+    '''Creates a binary matrix with endproducts as indices and parts as columns'''
+    if not root_nodes: 
+        root_nodes = get_all_roots(G)
+    dfs = [pd.DataFrame({root: get_all_successors(G, root)}).stack() for root in tqdm(root_nodes)]
+    final_df = pd.concat(dfs).reset_index(level=-1)
+    final_df.columns = ['head', 'parts']
+    return final_df.assign(value=1).pivot_table(index='head', columns='parts', values='value', fill_value=0).astype(int)
