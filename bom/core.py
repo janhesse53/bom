@@ -4,7 +4,8 @@
 
 # %% auto 0
 __all__ = ['get_sample_data', 'build_complete_graph', 'get_all_predecessors', 'get_all_successors', 'select_subg_by_root',
-           'get_all_roots', 'add_levels', 'plot_graph', 'create_binary_matrix']
+           'get_all_roots', 'add_levels', 'plot_graph', 'create_binary_matrix', 'get_all_successor_edges',
+           'get_all_predecessor_edges', 'create_matrix']
 
 # %% ../nbs/00_core.ipynb 3
 import pandas as pd
@@ -262,3 +263,51 @@ def create_binary_matrix(G, root_nodes=None):
     final_df = pd.concat(dfs).reset_index(level=-1)
     final_df.columns = ['head', 'parts']
     return final_df.assign(value=1).pivot_table(index='head', columns='parts', values='value', fill_value=0).astype(int)
+
+# %% ../nbs/00_core.ipynb 35
+def get_all_successor_edges(G, node_id, attr="quantity", default=None):
+    """
+    Return a list of all edge pairs for `node_id` with the specified attribute.
+    """
+    visited = set([node_id])
+    queue = [node_id]
+    edges = []
+
+    while queue:
+        u = queue.pop(0)
+        for _, v, data in G.out_edges(u, data=True):
+            qty = data.get(attr, default)
+            edges.append([node_id, u, v, qty])
+            if v not in visited:
+                visited.add(v)
+                queue.append(v)
+    return edges
+
+# %% ../nbs/00_core.ipynb 36
+def get_all_predecessor_edges(G, node_id, attr="quantity", default=None):
+    """
+    Return a list of all predecessor edges for `node_id` with the specified attribute.
+    """
+    visited = set([node_id])
+    queue = [node_id]
+    edges = []
+
+    while queue:
+        u = queue.pop(0)
+        for pred, _, data in G.in_edges(u, data=True):
+            qty = data.get(attr, default)
+            edges.append([node_id, pred, u, qty])
+            if pred not in visited:
+                visited.add(pred)
+                queue.append(pred)
+    return edges
+
+# %% ../nbs/00_core.ipynb 45
+def create_matrix(G, attr='quantity', root_nodes=None):
+    '''Creates a matrix with endproducts as indices and parts as columns and values as attributes'''
+    if not root_nodes: 
+        root_nodes = get_all_roots(G)
+    dfs = [pd.DataFrame(get_all_successor_edges(G, root)) for root in get_all_roots(G)]
+    final_df = pd.concat(dfs)
+    final_df.columns = ['head', 'parent', 'child', attr]
+    return final_df.pivot_table(index='head', columns='child', values=attr, aggfunc='sum')
