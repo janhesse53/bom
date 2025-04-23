@@ -1,0 +1,82 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "bom",
+    "section": "",
+    "text": "Install latest from the GitHub repository:\n$ pip install git+https://github.com/janhesse53/bom.git\n\n\n\nDocumentation can be found hosted on this GitHub repository’s pages.",
+    "crumbs": [
+      "bom"
+    ]
+  },
+  {
+    "objectID": "index.html#developer-guide",
+    "href": "index.html#developer-guide",
+    "title": "bom",
+    "section": "",
+    "text": "Install latest from the GitHub repository:\n$ pip install git+https://github.com/janhesse53/bom.git\n\n\n\nDocumentation can be found hosted on this GitHub repository’s pages.",
+    "crumbs": [
+      "bom"
+    ]
+  },
+  {
+    "objectID": "index.html#how-to-use",
+    "href": "index.html#how-to-use",
+    "title": "bom",
+    "section": "How to use",
+    "text": "How to use\n\ndf, df_attributes = get_sample_data()\n\nBuild the complete graph from df (optionally merging df_attributes):\n\nG = build_complete_graph(df, df_attributes)\n\n# Let's confirm the number of nodes (20 unique items)\nprint(\"Number of nodes:\", G.number_of_nodes())\nprint(\"Number of edges:\", G.number_of_edges())\n\nNumber of nodes: 20\nNumber of edges: 21\n\n\nOften, we only want to visualize one product (like PUMP_RV2) and its sub-components:\n\nsub_g = select_subg_by_root(G, 'PUMP_RV2')\nsub_g.nodes()\n\nNodeView(('MOTOR_A1', 'CASE_STD1', 'PUMP_RV2', 'BEARING_01', 'VANE_002', 'VANE_ASM2'))\n\n\n\nsub_g = add_levels(sub_g)\n[(n[0],n[1]['level']) for n in sub_g.nodes(data=True)]\n\n[('MOTOR_A1', 1),\n ('CASE_STD1', 1),\n ('PUMP_RV2', 0),\n ('BEARING_01', 2),\n ('VANE_002', 2),\n ('VANE_ASM2', 1)]\n\n\n\nplot_graph(sub_g, layout='multipartite', figsize=(5,4), font_size=8)\n\n\n\n\n\n\n\n\n\nGraph Querying\nWith the complete graph, we can answer many questions:\nWhich products contain a certain part?\n\nget_all_predecessors(G, 'BEARING_01')\n\n['VANE_ASM1', 'VANE_ASM2', 'PUMP_RV1', 'PUMP_RV2']\n\n\nAll sub-components of a certain product?\n\nget_all_successors(G, 'PUMP_CL1')\n\n['MOTOR_A1', 'CASE_CL1', 'CLAW_ASM1', 'CLAW_001', 'BEARING_02']\n\n\nEdge attributes (like quantity):\n\nfor (u,v,d) in G.edges(data=True):\n  if 'quantity' in d and d['quantity'] &gt; 1:\n      print(u, '--&gt;', v, '[qty=', d['quantity'], ']')\n\nVANE_ASM1 --&gt; VANE_001 [qty= 6 ]\nVANE_ASM1 --&gt; BEARING_01 [qty= 2 ]\nVANE_ASM2 --&gt; VANE_002 [qty= 6 ]\nVANE_ASM2 --&gt; BEARING_01 [qty= 2 ]\nSCREW_ASM1 --&gt; SCREW_001 [qty= 2 ]\nSCREW_ASM1 --&gt; BEARING_02 [qty= 4 ]\nCLAW_ASM1 --&gt; CLAW_001 [qty= 2 ]\nCLAW_ASM1 --&gt; BEARING_02 [qty= 4 ]\n\n\nNode attributes (like component_type, cost):\n\n# Example: Print the cost of each node if it exists\nfor n, attrs in G.nodes(data=True):\n  if 'cost' in attrs:\n      print(n, 'cost=', attrs['cost'])\n\nPUMP_RV1 cost= 2500\nMOTOR_A1 cost= 800\nCASE_STD1 cost= 400\nVANE_ASM1 cost= 300\nOIL_SYSTEM1 cost= 150\nVANE_001 cost= 50\nBEARING_01 cost= 30\nPUMP_RV2 cost= 2300\nVANE_ASM2 cost= 280\nVANE_002 cost= 65\nPUMP_SC1 cost= 3000\nMOTOR_B1 cost= 1000\nCASE_SC1 cost= 600\nSCREW_ASM1 cost= 450\nSCREW_001 cost= 150\nBEARING_02 cost= 45\nPUMP_CL1 cost= 2800\nCASE_CL1 cost= 450\nCLAW_ASM1 cost= 400\nCLAW_001 cost= 140",
+    "crumbs": [
+      "bom"
+    ]
+  },
+  {
+    "objectID": "core.html",
+    "href": "core.html",
+    "title": "core",
+    "section": "",
+    "text": "source",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#core-functions",
+    "href": "core.html#core-functions",
+    "title": "core",
+    "section": "Core Functions",
+    "text": "Core Functions\nWe create one large directed graph containing all nodes and edges from df. For node attributes, we can optionally merge data from df_attributes.\n\nsource\n\nbuild_complete_graph\n\n build_complete_graph (df, df_attributes=None)\n\nBuild a directed graph (DiGraph) from the BOM DataFrame. Optionally enrich nodes with attributes from df_attributes.\n\nG = build_complete_graph(df, df_attributes)\n\nprint(\"Number of nodes:\", G.number_of_nodes())\nprint(\"Number of edges:\", G.number_of_edges())\n\nNumber of nodes: 20\nNumber of edges: 21\n\n\nIf we want to see which assemblies or products contain a given part, we can move upwards in the graph (following edges backwards).\n\nsource\n\n\nget_all_predecessors\n\n get_all_predecessors (G, node_id)\n\nReturn a list of all predecessors (ancestors) of node_id. This effectively finds all assemblies or parent items that contain node_id.\nNow, we can answer questions like: &gt; Where is component ‘MOTOR_A1’ installed?\n\nget_all_predecessors(G, 'MOTOR_A1')\n\n['PUMP_RV1', 'PUMP_RV2', 'PUMP_CL1']\n\n\nSimilarly, we can move down the graph to find all sub-components or child items of a given product or assembly.\n\nsource\n\n\nget_all_successors\n\n get_all_successors (G, node_id)\n\nReturn a list of all successors (descendants) of node_id. This effectively finds the complete set of parts that make up node_id.\nNow, we can answer questions like: &gt; What component are installed in ‘PUMP_RV1’?\n\nget_all_successors(G, 'PUMP_RV1')\n\n['MOTOR_A1', 'CASE_STD1', 'VANE_ASM1', 'OIL_SYSTEM1', 'VANE_001', 'BEARING_01']\n\n\nWe can select a sub_graph by giving a root node and then searching for all successors.\n\nsource\n\n\nselect_subg_by_root\n\n select_subg_by_root (G, root_id)\n\n\nsub_g = select_subg_by_root(G, 'PUMP_RV1')\nsub_g.nodes()\n\nNodeView(('BEARING_01', 'VANE_001', 'CASE_STD1', 'MOTOR_A1', 'VANE_ASM1', 'PUMP_RV1', 'OIL_SYSTEM1'))\n\n\nFor a multipartite (hierarchical) layout in NetworkX, each node must have a level attribute. The “level” is typically “0” for a root product, “1” for its direct children, “2” for those children’s children, etc. This function automatically detects the root(s) (any node with no incoming edges) and assigns levels by breadth-first search.\n\nsource\n\n\nget_all_roots\n\n get_all_roots (G)\n\nReturns a list of nodes with no ingoing edges (root_nodes)\n\nsource\n\n\nadd_levels\n\n add_levels (G)\n\nCalculate levels starting from root\n\nsub_g = add_levels(sub_g)\n[(n[0],n[1]['level']) for n in sub_g.nodes(data=True)]\n\n[('BEARING_01', 2),\n ('VANE_001', 2),\n ('CASE_STD1', 1),\n ('MOTOR_A1', 1),\n ('VANE_ASM1', 1),\n ('PUMP_RV1', 0),\n ('OIL_SYSTEM1', 1)]\n\n\nThe depth of the bill of materials can give us information about the depth of added value per product.\n\nmax([n[1]['level'] for n in sub_g.nodes(data=True)])\n\n2",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#visualizing",
+    "href": "core.html#visualizing",
+    "title": "core",
+    "section": "Visualizing",
+    "text": "Visualizing\nFinally, we create a plotting function that can handle:\n\nEither a multipartite layout (if levels are assigned)\nOr a kamada_kawai layout (force-directed)\n\nWe also display edge attributes (quantity), and we allow parameter overrides (font size, node size, color, etc.) for quick styling changes.\n\nsource\n\nplot_graph\n\n plot_graph (G, layout='multipartite', figsize=(24, 12), font_size=8,\n             node_size=1000, node_color='lightblue',\n             direction='top_to_bottom', label_rotation=45)\n\nPlot a graph with specified layout and styling.\n\n\n\n\n\n\n\n\n\n\nType\nDefault\nDetails\n\n\n\n\nG\n\n\nNetworkX graph\n\n\nlayout\nstr\nmultipartite\n‘multipartite’ or ‘kamada_kawai’\n\n\nfigsize\ntuple\n(24, 12)\n\n\n\nfont_size\nint\n8\n\n\n\nnode_size\nint\n1000\n\n\n\nnode_color\nstr\nlightblue\n\n\n\ndirection\nstr\ntop_to_bottom\nif layout is multipartite the direction is top to bottom, to rotate set to None\n\n\nlabel_rotation\nint\n45\nRotation angle for node labels (in degrees)\n\n\n\n\nplot_graph(sub_g)",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#creating-a-binary-matrix",
+    "href": "core.html#creating-a-binary-matrix",
+    "title": "core",
+    "section": "Creating a binary matrix",
+    "text": "Creating a binary matrix\nWe can also create a binary matrix, with endproducts in the index and parts as columns. This is very helpful, for further analysis, like similarity searches and product clustering.\n\nsource\n\ncreate_binary_matrix\n\n create_binary_matrix (G, root_nodes=None)\n\nCreates a binary matrix with endproducts as indices and parts as columns\n\nb_matrix = create_binary_matrix(G)\nb_matrix\n\n\n\n\n\n\n\nparts\nBEARING_01\nBEARING_02\nCASE_CL1\nCASE_SC1\nCASE_STD1\nCLAW_001\nCLAW_ASM1\nMOTOR_A1\nMOTOR_B1\nOIL_SYSTEM1\nSCREW_001\nSCREW_ASM1\nVANE_001\nVANE_002\nVANE_ASM1\nVANE_ASM2\n\n\nhead\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPUMP_CL1\n0\n1\n1\n0\n0\n1\n1\n1\n0\n0\n0\n0\n0\n0\n0\n0\n\n\nPUMP_RV1\n1\n0\n0\n0\n1\n0\n0\n1\n0\n1\n0\n0\n1\n0\n1\n0\n\n\nPUMP_RV2\n1\n0\n0\n0\n1\n0\n0\n1\n0\n0\n0\n0\n0\n1\n0\n1\n\n\nPUMP_SC1\n0\n1\n0\n1\n0\n0\n0\n0\n1\n0\n1\n1\n0\n0\n0\n0",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#creating-a-matrix-for-parts-utilisation",
+    "href": "core.html#creating-a-matrix-for-parts-utilisation",
+    "title": "core",
+    "section": "Creating a matrix for parts utilisation",
+    "text": "Creating a matrix for parts utilisation\nWe can also create a matrix, with endproducts in the index and parts as columns and the values representing some value (for example cost or quantity or something else). This is very helpful, for further analysis, like similarity searches and product clustering.\n\nG.out_edges(['PUMP_RV1'], data=True)\n\nOutEdgeDataView([('PUMP_RV1', 'MOTOR_A1', {'quantity': 1}), ('PUMP_RV1', 'CASE_STD1', {'quantity': 1}), ('PUMP_RV1', 'VANE_ASM1', {'quantity': 1}), ('PUMP_RV1', 'OIL_SYSTEM1', {'quantity': 1})])\n\n\n\nelist = [[u, v, data['quantity']] for u,v,data in G.out_edges(['PUMP_RV1'], data=True)]\nelist\n\n[['PUMP_RV1', 'MOTOR_A1', 1],\n ['PUMP_RV1', 'CASE_STD1', 1],\n ['PUMP_RV1', 'VANE_ASM1', 1],\n ['PUMP_RV1', 'OIL_SYSTEM1', 1]]\n\n\n\nsource\n\nget_all_successor_edges\n\n get_all_successor_edges (G, node_id, attr='quantity', default=None)\n\nReturn a list of all edge pairs for node_id with the specified attribute.\n\nsource\n\n\nget_all_predecessor_edges\n\n get_all_predecessor_edges (G, node_id, attr='quantity', default=None)\n\nReturn a list of all predecessor edges for node_id with the specified attribute.\n\nget_all_successor_edges(G, 'PUMP_RV1')\n\n[['PUMP_RV1', 'PUMP_RV1', 'MOTOR_A1', 1],\n ['PUMP_RV1', 'PUMP_RV1', 'CASE_STD1', 1],\n ['PUMP_RV1', 'PUMP_RV1', 'VANE_ASM1', 1],\n ['PUMP_RV1', 'PUMP_RV1', 'OIL_SYSTEM1', 1],\n ['PUMP_RV1', 'VANE_ASM1', 'VANE_001', 6],\n ['PUMP_RV1', 'VANE_ASM1', 'BEARING_01', 2]]\n\n\n\nget_all_successor_edges(G, 'BEARING_01')\n\n[]\n\n\n\nget_all_predecessor_edges(G, 'PUMP_RV1')\n\n[]\n\n\n\nget_all_predecessor_edges(G, 'BEARING_01')\n\n[['BEARING_01', 'VANE_ASM1', 'BEARING_01', 2],\n ['BEARING_01', 'VANE_ASM2', 'BEARING_01', 2],\n ['BEARING_01', 'PUMP_RV1', 'VANE_ASM1', 1],\n ['BEARING_01', 'PUMP_RV2', 'VANE_ASM2', 1]]\n\n\n\ndfs = [pd.DataFrame(get_all_successor_edges(G, root)) for root in get_all_roots(G)]\ndfs[:2]\n\n[          0          1            2  3\n 0  PUMP_RV1   PUMP_RV1     MOTOR_A1  1\n 1  PUMP_RV1   PUMP_RV1    CASE_STD1  1\n 2  PUMP_RV1   PUMP_RV1    VANE_ASM1  1\n 3  PUMP_RV1   PUMP_RV1  OIL_SYSTEM1  1\n 4  PUMP_RV1  VANE_ASM1     VANE_001  6\n 5  PUMP_RV1  VANE_ASM1   BEARING_01  2,\n           0          1           2  3\n 0  PUMP_RV2   PUMP_RV2    MOTOR_A1  1\n 1  PUMP_RV2   PUMP_RV2   CASE_STD1  1\n 2  PUMP_RV2   PUMP_RV2   VANE_ASM2  1\n 3  PUMP_RV2  VANE_ASM2    VANE_002  6\n 4  PUMP_RV2  VANE_ASM2  BEARING_01  2]\n\n\n\nfinal_df = pd.concat(dfs)\nfinal_df.head()\n\n\n\n\n\n\n\n\n0\n1\n2\n3\n\n\n\n\n0\nPUMP_RV1\nPUMP_RV1\nMOTOR_A1\n1\n\n\n1\nPUMP_RV1\nPUMP_RV1\nCASE_STD1\n1\n\n\n2\nPUMP_RV1\nPUMP_RV1\nVANE_ASM1\n1\n\n\n3\nPUMP_RV1\nPUMP_RV1\nOIL_SYSTEM1\n1\n\n\n4\nPUMP_RV1\nVANE_ASM1\nVANE_001\n6\n\n\n\n\n\n\n\n\nfinal_df.columns = ['head', 'parent', 'child', 'quantity']\nfinal_df.head()\n\n\n\n\n\n\n\n\nhead\nparent\nchild\nquantity\n\n\n\n\n0\nPUMP_RV1\nPUMP_RV1\nMOTOR_A1\n1\n\n\n1\nPUMP_RV1\nPUMP_RV1\nCASE_STD1\n1\n\n\n2\nPUMP_RV1\nPUMP_RV1\nVANE_ASM1\n1\n\n\n3\nPUMP_RV1\nPUMP_RV1\nOIL_SYSTEM1\n1\n\n\n4\nPUMP_RV1\nVANE_ASM1\nVANE_001\n6\n\n\n\n\n\n\n\n\nfinal_df.pivot_table(index='head', columns='child', values='quantity', aggfunc='sum')\n\n\n\n\n\n\n\nchild\nBEARING_01\nBEARING_02\nCASE_CL1\nCASE_SC1\nCASE_STD1\nCLAW_001\nCLAW_ASM1\nMOTOR_A1\nMOTOR_B1\nOIL_SYSTEM1\nSCREW_001\nSCREW_ASM1\nVANE_001\nVANE_002\nVANE_ASM1\nVANE_ASM2\n\n\nhead\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPUMP_CL1\nNaN\n4.0\n1.0\nNaN\nNaN\n2.0\n1.0\n1.0\nNaN\nNaN\nNaN\nNaN\nNaN\nNaN\nNaN\nNaN\n\n\nPUMP_RV1\n2.0\nNaN\nNaN\nNaN\n1.0\nNaN\nNaN\n1.0\nNaN\n1.0\nNaN\nNaN\n6.0\nNaN\n1.0\nNaN\n\n\nPUMP_RV2\n2.0\nNaN\nNaN\nNaN\n1.0\nNaN\nNaN\n1.0\nNaN\nNaN\nNaN\nNaN\nNaN\n6.0\nNaN\n1.0\n\n\nPUMP_SC1\nNaN\n4.0\nNaN\n1.0\nNaN\nNaN\nNaN\nNaN\n1.0\nNaN\n2.0\n1.0\nNaN\nNaN\nNaN\nNaN\n\n\n\n\n\n\n\n\nsource\n\n\ncreate_matrix\n\n create_matrix (G, attr='quantity', root_nodes=None)\n\nCreates a matrix with endproducts as indices and parts as columns and values as attributes\n\ncreate_matrix(G)\n\n\n\n\n\n\n\nchild\nBEARING_01\nBEARING_02\nCASE_CL1\nCASE_SC1\nCASE_STD1\nCLAW_001\nCLAW_ASM1\nMOTOR_A1\nMOTOR_B1\nOIL_SYSTEM1\nSCREW_001\nSCREW_ASM1\nVANE_001\nVANE_002\nVANE_ASM1\nVANE_ASM2\n\n\nhead\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\nPUMP_CL1\nNaN\n4.0\n1.0\nNaN\nNaN\n2.0\n1.0\n1.0\nNaN\nNaN\nNaN\nNaN\nNaN\nNaN\nNaN\nNaN\n\n\nPUMP_RV1\n2.0\nNaN\nNaN\nNaN\n1.0\nNaN\nNaN\n1.0\nNaN\n1.0\nNaN\nNaN\n6.0\nNaN\n1.0\nNaN\n\n\nPUMP_RV2\n2.0\nNaN\nNaN\nNaN\n1.0\nNaN\nNaN\n1.0\nNaN\nNaN\nNaN\nNaN\nNaN\n6.0\nNaN\n1.0\n\n\nPUMP_SC1\nNaN\n4.0\nNaN\n1.0\nNaN\nNaN\nNaN\nNaN\n1.0\nNaN\n2.0\n1.0\nNaN\nNaN\nNaN\nNaN",
+    "crumbs": [
+      "core"
+    ]
+  }
+]
