@@ -265,10 +265,12 @@ def create_binary_matrix(G, root_nodes=None):
     return final_df.assign(value=1).pivot_table(index='head', columns='parts', values='value', fill_value=0).astype(int)
 
 # %% ../nbs/00_core.ipynb 35
-def get_all_successor_edges(G, node_id, attr="quantity", default=None):
+def get_all_successor_edges(G, node_id, attrs=None, default=None):
     """
-    Return a list of all edge pairs for `node_id` with the specified attribute.
+    Return a list of all edge pairs for `node_id` with the specified attributes.
     """
+    if attrs is None: attrs = []
+
     visited = set([node_id])
     queue = [node_id]
     edges = []
@@ -276,18 +278,22 @@ def get_all_successor_edges(G, node_id, attr="quantity", default=None):
     while queue:
         u = queue.pop(0)
         for _, v, data in G.out_edges(u, data=True):
-            qty = data.get(attr, default)
-            edges.append([node_id, u, v, qty])
+            edge_info = {"source": node_id, "from": u, "to": v}
+            for attr in attrs:
+                edge_info[attr] = data.get(attr, default)
+            edges.append(edge_info)
             if v not in visited:
                 visited.add(v)
                 queue.append(v)
     return edges
 
 # %% ../nbs/00_core.ipynb 36
-def get_all_predecessor_edges(G, node_id, attr="quantity", default=None):
+def get_all_predecessor_edges(G, node_id, attrs=None, default=None):
     """
-    Return a list of all predecessor edges for `node_id` with the specified attribute.
+    Return a list of all predecessor edges for `node_id` with the specified attributes.
     """
+    if attrs is None: attrs = []
+
     visited = set([node_id])
     queue = [node_id]
     edges = []
@@ -295,19 +301,22 @@ def get_all_predecessor_edges(G, node_id, attr="quantity", default=None):
     while queue:
         u = queue.pop(0)
         for pred, _, data in G.in_edges(u, data=True):
-            qty = data.get(attr, default)
-            edges.append([node_id, pred, u, qty])
+            edge_info = {"source": node_id, "from": pred, "to": u}
+            for attr in attrs:
+                edge_info[attr] = data.get(attr, default)
+            edges.append(edge_info)
+
             if pred not in visited:
                 visited.add(pred)
                 queue.append(pred)
     return edges
 
 # %% ../nbs/00_core.ipynb 45
-def create_matrix(G, attr='quantity', root_nodes=None):
+def create_matrix(G, attrs=['quantity'], root_nodes=None):
     '''Creates a matrix with endproducts as indices and parts as columns and values as attributes'''
     if not root_nodes: 
         root_nodes = get_all_roots(G)
-    dfs = [pd.DataFrame(get_all_successor_edges(G, root)) for root in get_all_roots(G)]
+    dfs = [pd.DataFrame(get_all_successor_edges(G, root, attrs=attrs)) for root in get_all_roots(G)]
     final_df = pd.concat(dfs)
-    final_df.columns = ['head', 'parent', 'child', attr]
-    return final_df.pivot_table(index='head', columns='child', values=attr, aggfunc='sum')
+    final_df.columns = ['head', 'parent', 'child'] + attrs
+    return final_df.pivot_table(index='head', columns='child', values=attrs, aggfunc='sum')
