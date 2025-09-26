@@ -254,7 +254,7 @@ def plot_graph(G, # NetworkX graph
     plt.axis('off')
     plt.show()
 
-# %% ../nbs/00_core.ipynb 30
+# %% ../nbs/00_core.ipynb 35
 def create_binary_matrix(G, root_nodes=None):
     '''Creates a binary matrix with endproducts as indices and parts as columns'''
     if not root_nodes: 
@@ -262,9 +262,9 @@ def create_binary_matrix(G, root_nodes=None):
     dfs = [pd.DataFrame({root: get_all_successors(G, root)}).stack() for root in root_nodes]
     final_df = pd.concat(dfs).reset_index(level=-1)
     final_df.columns = ['head', 'parts']
-    return final_df.assign(value=1).pivot_table(index='head', columns='parts', values='value', fill_value=0).astype(int)
+    return final_df.assign(value=True).pivot_table(index='head', columns='parts', values='value', fill_value=False).astype(bool)
 
-# %% ../nbs/00_core.ipynb 35
+# %% ../nbs/00_core.ipynb 40
 def get_all_successor_edges(G, node_id, attrs=None, default=None):
     """
     Return a list of all edge pairs for `node_id` with the specified attributes.
@@ -287,7 +287,7 @@ def get_all_successor_edges(G, node_id, attrs=None, default=None):
                 queue.append(v)
     return edges
 
-# %% ../nbs/00_core.ipynb 36
+# %% ../nbs/00_core.ipynb 41
 def get_all_predecessor_edges(G, node_id, attrs=None, default=None):
     """
     Return a list of all predecessor edges for `node_id` with the specified attributes.
@@ -311,7 +311,7 @@ def get_all_predecessor_edges(G, node_id, attrs=None, default=None):
                 queue.append(pred)
     return edges
 
-# %% ../nbs/00_core.ipynb 45
+# %% ../nbs/00_core.ipynb 50
 def create_matrix(G, attrs=['quantity'], root_nodes=None):
     '''Creates a matrix with endproducts as indices and parts as columns and values as attributes'''
     if not root_nodes: 
